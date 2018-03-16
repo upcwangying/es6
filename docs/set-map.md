@@ -34,28 +34,27 @@ const items = new Set([1, 2, 3, 4, 5, 5, 5, 5]);
 items.size // 5
 
 // 例三
-function divs () {
-  return [...document.querySelectorAll('div')];
-}
-
-const set = new Set(divs());
+const set = new Set(document.querySelectorAll('div'));
 set.size // 56
 
 // 类似于
-divs().forEach(div => set.add(div));
+const set = new Set();
+document
+ .querySelectorAll('div')
+ .forEach(div => set.add(div));
 set.size // 56
 ```
 
 上面代码中，例一和例二都是`Set`函数接受数组作为参数，例三是接受类似数组的对象作为参数。
 
-上面代码中，也展示了一种去除数组重复成员的方法。
+上面代码也展示了一种去除数组重复成员的方法。
 
 ```javascript
 // 去除数组的重复成员
 [...new Set(array)]
 ```
 
-向 Set 加入值的时候，不会发生类型转换，所以`5`和`"5"`是两个不同的值。Set 内部判断两个值是否不同，使用的算法叫做“Same-value equality”，它类似于精确相等运算符（`===`），主要的区别是`NaN`等于自身，而精确相等运算符认为`NaN`不等于自身。
+向 Set 加入值的时候，不会发生类型转换，所以`5`和`"5"`是两个不同的值。Set 内部判断两个值是否不同，使用的算法叫做“Same-value-zero equality”，它类似于精确相等运算符（`===`），主要的区别是`NaN`等于自身，而精确相等运算符认为`NaN`不等于自身。
 
 ```javascript
 let set = new Set();
@@ -805,7 +804,7 @@ new Map([
 
 **（3）Map 转为对象**
 
-如果所有 Map 的键都是字符串，它可以转为对象。
+如果所有 Map 的键都是字符串，它可以无损地转为对象。
 
 ```javascript
 function strMapToObj(strMap) {
@@ -822,6 +821,8 @@ const myMap = new Map()
 strMapToObj(myMap)
 // { yes: true, no: false }
 ```
+
+如果有非字符串的键名，那么这个键名会被转成字符串，再作为对象的键名。
 
 **（4）对象转为 Map**
 
@@ -877,7 +878,7 @@ jsonToStrMap('{"yes": true, "no": false}')
 // Map {'yes' => true, 'no' => false}
 ```
 
-但是，有一种特殊情况，整个 JSON 就是一个数组，且每个数组成员本身，又是一个有两个成员的数组。这时，它可以一一对应地转为 Map。这往往是数组转为 JSON 的逆操作。
+但是，有一种特殊情况，整个 JSON 就是一个数组，且每个数组成员本身，又是一个有两个成员的数组。这时，它可以一一对应地转为 Map。这往往是 Map 转为数组 JSON 的逆操作。
 
 ```javascript
 function jsonToMap(jsonStr) {

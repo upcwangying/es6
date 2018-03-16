@@ -58,7 +58,7 @@ const arr = [
 // [1]
 ```
 
-### 替代数组的 apply 方法
+### 替代函数的 apply 方法
 
 由于扩展运算符可以展开数组，所以不再需要`apply`方法，将数组转为函数的参数了。
 
@@ -346,8 +346,8 @@ let arr2 = Array.from(arrayLike); // ['a', 'b', 'c']
 ```javascript
 // NodeList对象
 let ps = document.querySelectorAll('p');
-Array.from(ps).forEach(function (p) {
-  console.log(p);
+Array.from(ps).filter(p => {
+  return p.textContent.length > 100;
 });
 
 // arguments对象
@@ -357,7 +357,7 @@ function foo() {
 }
 ```
 
-上面代码中，`querySelectorAll`方法返回的是一个类似数组的对象，可以将这个对象转为真正的数组，再使用`forEach`方法。
+上面代码中，`querySelectorAll`方法返回的是一个类似数组的对象，可以将这个对象转为真正的数组，再使用`filter`方法。
 
 只要是部署了 Iterator 接口的数据结构，`Array.from`都能将其转为数组。
 
@@ -515,7 +515,7 @@ Array.prototype.copyWithin(target, start = 0, end = this.length)
 
 它接受三个参数。
 
-- target（必需）：从该位置开始替换数据。
+- target（必需）：从该位置开始替换数据。如果为负值，表示倒数。
 - start（可选）：从该位置开始读取数据，默认为 0。如果为负值，表示倒数。
 - end（可选）：到该位置前停止读取数据，默认等于数组长度。如果为负值，表示倒数。
 
@@ -583,6 +583,16 @@ i32a.copyWithin(0, 2);
 
 这两个方法都可以接受第二个参数，用来绑定回调函数的`this`对象。
 
+```javascript
+function f(v){
+  return v > this.age;
+}
+let person = {name: 'John', age: 20};
+[10, 12, 26, 15].find(f, person);    // 26
+```
+
+上面的代码中，`find`函数接收了第二个参数`person`对象，回调函数中的`this`对象指向`person`对象。
+
 另外，这两个方法都可以发现`NaN`，弥补了数组的`indexOf`方法的不足。
 
 ```javascript
@@ -617,6 +627,20 @@ new Array(3).fill(7)
 ```
 
 上面代码表示，`fill`方法从 1 号位开始，向原数组填充 7，到 2 号位之前结束。
+
+注意，如果填充的类型为对象，那么被赋值的是同一个内存地址的对象，而不是深拷贝对象。
+
+```javascript
+let arr = new Array(3).fill({name: "Mike"});
+arr[0].name = "Ben";
+arr
+// [{name: "Ben"}, {name: "Ben"}, {name: "Ben"}]
+
+let arr = new Array(3).fill([]);
+arr[0].push(5);
+arr
+// [[5], [5], [5]]
+```
 
 ## 数组实例的 entries()，keys() 和 values()
 

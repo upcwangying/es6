@@ -454,7 +454,17 @@ Float64Array.BYTES_PER_ELEMENT // 8
 function ab2str(buf) {
   // 注意，如果是大型二进制数组，为了避免溢出，
   // 必须一个一个字符地转
-  return String.fromCharCode.apply(null, new Uint16Array(buf));
+  if (buf && buf.byteLength < 1024) {
+    return String.fromCharCode.apply(null, new Uint16Array(buf));
+  }
+
+  const bufView = new Uint16Array(buf);
+  const len =  bufView.length;
+  const bstr = new Array(len);
+  for (let i = 0; i < len; i++) {
+    bstr[i] = String.fromCharCode.call(null, bufView[i]);
+  }
+  return bstr.join('');
 }
 
 // 字符串转为 ArrayBuffer 对象，参数为字符串
@@ -1125,7 +1135,7 @@ Atomics.add(ia, 112, 1); // 正确
 
 `store()`方法用来向共享内存写入数据，`load()`方法用来从共享内存读出数据。比起直接的读写操作，它们的好处是保证了读写操作的原子性。
 
-此外，它们还用来解决一个问题：多个线程使用共享线程的某个位置作为开关（flag），一旦该位置的值变了，就执行特定操作。这时，必须保证该位置的赋值操作，一定是在它前面的所有可能会改写内存的操作结束后执行；而该位置的取值操作，一定是在它后面所有可能会读取该位置的操作开始之前执行。`store`方法和`load`方法就能做到这一点，编译器不会为了优化，而打乱机器指令的执行顺序。
+此外，它们还用来解决一个问题：多个线程使用共享内存的某个位置作为开关（flag），一旦该位置的值变了，就执行特定操作。这时，必须保证该位置的赋值操作，一定是在它前面的所有可能会改写内存的操作结束后执行；而该位置的取值操作，一定是在它后面所有可能会读取该位置的操作开始之前执行。`store`方法和`load`方法就能做到这一点，编译器不会为了优化，而打乱机器指令的执行顺序。
 
 ```javascript
 Atomics.load(array, index)

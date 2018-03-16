@@ -178,7 +178,7 @@ ES5 对字符串对象提供`charAt`方法，返回字符串给定位置的字�
 '𠮷'.charAt(0) // "\uD842"
 ```
 
-上面代码中，`charAt`方法返回的是 UTF-16 编码的第一个字节，实际上是无法显示的。
+上面代码中的第二条语句，`charAt`方法期望返回的是用2个字节表示的字符，但汉字“𠮷”占用了4个字节，`charAt(0)`表示获取这4个字节中的前2个字节，很显然，这是无法正常显示的。
 
 目前，有一个提案，提出字符串实例的`at`方法，可以识别 Unicode 编号大于`0xFFFF`的字符，返回正确的字符。
 
@@ -348,6 +348,10 @@ ES2017 引入了字符串补全长度的功能。如果某个字符串不够指�
 '12'.padStart(10, 'YYYY-MM-DD') // "YYYY-MM-12"
 '09-12'.padStart(10, 'YYYY-MM-DD') // "YYYY-09-12"
 ```
+
+## matchAll()
+
+`matchAll`方法返回一个正则表达式在当前字符串的所有匹配，详见《正则的扩展》的一章。
 
 ## 模板字符串
 
@@ -865,32 +869,17 @@ ES6 还为原生的 String 对象，提供了一个`raw`方法。
 
 ```javascript
 String.raw`Hi\n${2+3}!`;
-// "Hi\\n5!"
+// 返回 "Hi\\n5!"
 
 String.raw`Hi\u000A!`;
-// 'Hi\\u000A!'
+// 返回 "Hi\\u000A!"
 ```
 
-如果原字符串的斜杠已经转义，那么`String.raw`不会做任何处理。
+如果原字符串的斜杠已经转义，那么`String.raw`会进行再次转义。
 
 ```javascript
 String.raw`Hi\\n`
-// "Hi\\n"
-```
-
-`String.raw`的代码基本如下。
-
-```javascript
-String.raw = function (strings, ...values) {
-  let output = "";
-  let index;
-  for (index = 0; index < values.length; index++) {
-    output += strings.raw[index] + values[index];
-  }
-
-  output += strings.raw[index]
-  return output;
-}
+// 返回 "Hi\\\\n"
 ```
 
 `String.raw`方法可以作为处理模板字符串的基本方法，它会将所有变量替换，而且对斜杠进行转义，方便下一步作为字符串来使用。
@@ -903,6 +892,21 @@ String.raw({ raw: 'test' }, 0, 1, 2);
 
 // 等同于
 String.raw({ raw: ['t','e','s','t'] }, 0, 1, 2);
+```
+
+作为函数，`String.raw`的代码实现基本如下。
+
+```javascript
+String.raw = function (strings, ...values) {
+  let output = '';
+  let index;
+  for (index = 0; index < values.length; index++) {
+    output += strings.raw[index] + values[index];
+  }
+
+  output += strings.raw[index]
+  return output;
+}
 ```
 
 ## 模板字符串的限制
@@ -929,7 +933,7 @@ Breve over the h goes \u{h}ere // 报错
 
 模板字符串会将`\u00FF`和`\u{42}`当作 Unicode 字符进行转义，所以`\unicode`解析时报错；而`\x56`会被当作十六进制字符串转义，所以`\xerxes`会报错。也就是说，`\u`和`\x`在 LaTEX 里面有特殊含义，但是 JavaScript 将它们转义了。
 
-为了解决这个问题，现在有一个[提案](https://tc39.github.io/proposal-template-literal-revision/)，放松对标签模板里面的字符串转义的限制。如果遇到不合法的字符串转义，就返回`undefined`，而不是报错，并且从`raw`属性上面可以得到原始字符串。
+为了解决这个问题，ES2018 [放松](https://tc39.github.io/proposal-template-literal-revision/)了对标签模板里面的字符串转义的限制。如果遇到不合法的字符串转义，就返回`undefined`，而不是报错，并且从`raw`属性上面可以得到原始字符串。
 
 ```javascript
 function tag(strs) {

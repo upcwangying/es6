@@ -6,7 +6,7 @@
 
 在 ES6 之前，社区制定了一些模块加载方案，最主要的有 CommonJS 和 AMD 两种。前者用于服务器，后者用于浏览器。ES6 在语言标准的层面上，实现了模块功能，而且实现得相当简单，完全可以取代 CommonJS 和 AMD 规范，成为浏览器和服务器通用的模块解决方案。
 
-ES6 模块的设计思想，是尽量的静态化，使得编译时就能确定模块的依赖关系，以及输入和输出的变量。CommonJS 和 AMD 模块，都只能在运行时确定这些东西。比如，CommonJS 模块就是对象，输入时必须查找对象属性。
+ES6 模块的设计思想是尽量的静态化，使得编译时就能确定模块的依赖关系，以及输入和输出的变量。CommonJS 和 AMD 模块，都只能在运行时确定这些东西。比如，CommonJS 模块就是对象，输入时必须查找对象属性。
 
 ```javascript
 // CommonJS模块
@@ -190,7 +190,7 @@ foo()
 
 ```javascript
 // main.js
-import {firstName, lastName, year} from './profile';
+import {firstName, lastName, year} from './profile.js';
 
 function setName(element) {
   element.textContent = firstName + ' ' + lastName;
@@ -202,8 +202,26 @@ function setName(element) {
 如果想为输入的变量重新取一个名字，`import`命令要使用`as`关键字，将输入的变量重命名。
 
 ```javascript
-import { lastName as surname } from './profile';
+import { lastName as surname } from './profile.js';
 ```
+
+`import`命令输入的变量都是只读的，因为它的本质是输入接口。也就是说，不允许在加载模块的脚本里面，改写接口。
+
+```javascript
+import {a} from './xxx.js'
+
+a = {}; // Syntax Error : 'a' is read-only;
+```
+
+上面代码中，脚本加载了变量`a`，对其重新赋值就会报错，因为`a`是一个只读的接口。但是，如果`a`是一个对象，改写`a`的属性是允许的。
+
+```javascript
+import {a} from './xxx.js'
+
+a.foo = 'hello'; // 合法操作
+```
+
+上面代码中，`a`的属性可以成功改写，并且其他模块也可以读到改写后的值。不过，这种写法很难查错，建议凡是输入的变量，都当作完全只读，轻易不要改变它的属性。
 
 `import`后面的`from`指定模块文件的位置，可以是相对路径，也可以是绝对路径，`.js`后缀可以省略。如果只是模块名，不带有路径，那么必须有配置文件，告诉 JavaScript 引擎该模块的位置。
 
@@ -390,7 +408,7 @@ import {crc32} from 'crc32'; // 输入
 
 上面代码的两组写法，第一组是使用`export default`时，对应的`import`语句不需要使用大括号；第二组是不使用`export default`时，对应的`import`语句需要使用大括号。
 
-`export default`命令用于指定模块的默认输出。显然，一个模块只能有一个默认输出，因此`export default`命令只能使用一次。所以，`import`命令后面才不用加大括号，因为只可能对应一个方法。
+`export default`命令用于指定模块的默认输出。显然，一个模块只能有一个默认输出，因此`export default`命令只能使用一次。所以，import命令后面才不用加大括号，因为只可能唯一对应`export default`命令。
 
 本质上，`export default`就是输出一个叫做`default`的变量或方法，然后系统允许你为它取任意名字。所以，下面的写法是有效的。
 
@@ -425,7 +443,7 @@ export default var a = 1;
 
 上面代码中，`export default a`的含义是将变量`a`的值赋给变量`default`。所以，最后一种写法会报错。
 
-同样地，因为`export default`本质是将该命令后面的值，赋给`default`变量以后再默认，所以直接将一个值写在`export default`之后。
+同样地，因为`export default`命令的本质是将后面的值，赋给`default`变量，所以可以直接将一个值写在`export default`之后。
 
 ```javascript
 // 正确
@@ -483,12 +501,12 @@ let o = new MyClass();
 ```javascript
 export { foo, bar } from 'my_module';
 
-// 等同于
+// 可以简单理解为
 import { foo, bar } from 'my_module';
 export { foo, bar };
 ```
 
-上面代码中，`export`和`import`语句可以结合在一起，写成一行。
+上面代码中，`export`和`import`语句可以结合在一起，写成一行。但需要注意的是，写成一行以后，`foo`和`bar`实际上并没有被导入当前模块，只是相当于对外转发了这两个接口，导致当前模块不能直接使用`foo`和`bar`。
 
 模块的接口改名和整体输出，也可以采用这种写法。
 
@@ -632,7 +650,7 @@ import {db, users} from './index';
 
 ### 简介
 
-前面介绍过，`import`命令会被 JavaScript 引擎静态分析，先于模块内的其他模块执行（叫做”连接“更合适）。所以，下面的代码会报错。
+前面介绍过，`import`命令会被 JavaScript 引擎静态分析，先于模块内的其他语句执行（`import`命令叫做”连接“ binding 其实更合适）。所以，下面的代码会报错。
 
 ```javascript
 // 报错
@@ -650,7 +668,7 @@ const path = './' + fileName;
 const myModual = require(path);
 ```
 
-上面的语句就是动态加载，`require`到底加载哪一个模块，只有运行时才知道。`import`语句做不到这一点。
+上面的语句就是动态加载，`require`到底加载哪一个模块，只有运行时才知道。`import`命令做不到这一点。
 
 因此，有一个[提案](https://github.com/tc39/proposal-dynamic-import)，建议引入`import()`函数，完成动态加载。
 
@@ -674,9 +692,34 @@ import(`./section-modules/${someVariable}.js`)
   });
 ```
 
-`import()`函数可以用在任何地方，不仅仅是模块，非模块的脚本也可以使用。它是运行时执行，也就是说，什么时候运行到这一句，也会加载指定的模块。另外，`import()`函数与所加载的模块没有静态连接关系，这点也是与`import`语句不相同。
+`import()`函数可以用在任何地方，不仅仅是模块，非模块的脚本也可以使用。它是运行时执行，也就是说，什么时候运行到这一句，就会加载指定的模块。另外，`import()`函数与所加载的模块没有静态连接关系，这点也是与`import`语句不相同。
 
-`import()`类似于 Node 的`require`方法，区别主要是前者是异步加载，后者是同步加载。
+`import()`类似于 Node 的`require`方法，区别主要是前者是异步加载，后者是同步加载。`import()`的浏览器实现，类似于下面的写法。
+
+```javascript
+function importModule(url) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    const tempGlobal = "__tempModuleLoadingVariable" + Math.random().toString(32).substring(2);
+    script.type = "module";
+    script.textContent = `import * as m from "${url}"; window.${tempGlobal} = m;`;
+
+    script.onload = () => {
+      resolve(window[tempGlobal]);
+      delete window[tempGlobal];
+      script.remove();
+    };
+
+    script.onerror = () => {
+      reject(new Error("Failed to load module script with URL " + url));
+      delete window[tempGlobal];
+      script.remove();
+    };
+
+    document.documentElement.appendChild(script);
+  });
+}
+```
 
 ### 适用场合
 

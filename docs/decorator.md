@@ -103,7 +103,7 @@ let obj = new MyClass();
 obj.foo() // 'foo'
 ```
 
-上面代码通过修饰器`mixins`，把`Foo`类的方法添加到了`MyClass`的实例上面。可以用`Object.assign()`模拟这个功能。
+上面代码通过修饰器`mixins`，把`Foo`对象的方法添加到了`MyClass`的实例上面。可以用`Object.assign()`模拟这个功能。
 
 ```javascript
 const Foo = {
@@ -200,7 +200,7 @@ function log(target, name, descriptor) {
   var oldValue = descriptor.value;
 
   descriptor.value = function() {
-    console.log(`Calling "${name}" with`, arguments);
+    console.log(`Calling ${name} with`, arguments);
     return oldValue.apply(null, arguments);
   };
 

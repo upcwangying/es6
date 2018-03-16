@@ -36,6 +36,7 @@
 - Jani Hartikainen, [ES6: What are the benefits of the new features in practice?](http://codeutopia.net/blog/2015/01/06/es6-what-are-the-benefits-of-the-new-features-in-practice/)
 - kangax, [Javascript quiz. ES6 edition](http://perfectionkills.com/javascript-quiz-es6/): ES6 小测试
 - Jeremy Fairbank, [HTML5DevConf ES7 and Beyond!](https://speakerdeck.com/jfairbank/html5devconf-es7-and-beyond): ES7 新增语法点介绍
+- Timothy Gu, [How to Read the ECMAScript Specification](https://timothygu.me/es-howto/): 如何读懂 ES6 规格
 
 ## let 和 const
 
@@ -66,6 +67,7 @@
 - Axel Rauschmayer, [New regular expression features in ECMAScript 6](http://www.2ality.com/2015/07/regexp-es6.html)：ES6 正则特性的详细介绍
 - Yang Guo, [RegExp lookbehind assertions](http://v8project.blogspot.jp/2016/02/regexp-lookbehind-assertions.html)：介绍后行断言
 - Axel Rauschmayer, [ES proposal: RegExp named capture groups](http://2ality.com/2017/05/regexp-named-capture-groups.html): 具名组匹配的介绍
+- Mathias Bynens, [ECMAScript regular expressions are getting better!](https://mathiasbynens.be/notes/es-regexp-proposals): 介绍 ES2018 添加的多项正则语法
 
 ## 数值
 
@@ -185,6 +187,7 @@
 - Jake Archibald, [Async functions - making promises friendly](https://developers.google.com/web/fundamentals/getting-started/primers/async-functions)
 - Axel Rauschmayer, [ES proposal: asynchronous iteration](http://www.2ality.com/2016/10/asynchronous-iteration.html): 异步遍历器的详细介绍
 - Dima Grossman, [How to write async await without try-catch blocks in Javascript](http://blog.grossman.io/how-to-write-async-await-without-try-catch-blocks-in-javascript/): 除了 try/catch 以外的 async 函数内部捕捉错误的方法
+- Mostafa Gaafa, [6 Reasons Why JavaScript’s Async/Await Blows Promises Away](https://hackernoon.com/6-reasons-why-javascripts-async-await-blows-promises-away-tutorial-c7ec10518dd9): Async 函数的6个好处
 
 ## Class
 

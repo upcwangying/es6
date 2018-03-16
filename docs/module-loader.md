@@ -89,8 +89,6 @@ const x = 1;
 
 console.log(x === window.x); //false
 console.log(this === undefined); // true
-
-delete x; // 句法错误，严格模式禁止删除变量
 ```
 
 利用顶层的`this`等于`undefined`这个语法点，可以侦测当前代码是否在 ES6 模块之中。
@@ -451,10 +449,9 @@ CommonJS 模块加载 ES6 模块，不能使用`require`命令，而要使用`im
 // es.mjs
 let foo = { bar: 'my-default' };
 export default foo;
-foo = null;
 
 // cjs.js
-const es_namespace = await import('./es');
+const es_namespace = await import('./es.mjs');
 // es_namespace = {
 //   get default() {
 //     ...
@@ -464,7 +461,7 @@ console.log(es_namespace.default);
 // { bar:'my-default' }
 ```
 
-上面代码中，`default`接口变成了`es_namespace.default`属性。另外，由于存在缓存机制，`es.js`对`foo`的重新赋值没有在模块外部反映出来。
+上面代码中，`default`接口变成了`es_namespace.default`属性。
 
 下面是另一个例子。
 
@@ -633,7 +630,7 @@ ReferenceError: foo is not defined
 
 上面代码中，执行`a.mjs`以后会报错，`foo`变量未定义，这是为什么？
 
-让我们一行行来看，ES6 循环加载是怎么处理的。首先，执行`a.mjs`以后，引擎发现它加载了`b.mjs`，因此会优先执行`b.mjs`，然后再执行`a.js`。接着，执行`b.mjs`的时候，已知它从`a.mjs`输入了`foo`接口，这时不会去执行`a.mjs`，而是认为这个接口已经存在了，继续往下执行。执行到第三行`console.log(foo)`的时候，才发现这个接口根本没定义，因此报错。
+让我们一行行来看，ES6 循环加载是怎么处理的。首先，执行`a.mjs`以后，引擎发现它加载了`b.mjs`，因此会优先执行`b.mjs`，然后再执行`a.mjs`。接着，执行`b.mjs`的时候，已知它从`a.mjs`输入了`foo`接口，这时不会去执行`a.mjs`，而是认为这个接口已经存在了，继续往下执行。执行到第三行`console.log(foo)`的时候，才发现这个接口根本没定义，因此报错。
 
 解决这个问题的方法，就是让`b.mjs`运行的时候，`foo`已经有定义了。这可以通过将`foo`写成函数来解决。
 
@@ -732,7 +729,7 @@ module.exports = function (n) {
 }
 ```
 
-上面代码中，`even.js`加载`odd.js`，而`odd.js`又去加载`even.js`，形成“循环加载”。这时，执行引擎就会输出`even.js`已经执行的部分（不存在任何结果），所以在`odd.js`之中，变量`even`等于`null`，等到后面调用`even(n-1)`就会报错。
+上面代码中，`even.js`加载`odd.js`，而`odd.js`又去加载`even.js`，形成“循环加载”。这时，执行引擎就会输出`even.js`已经执行的部分（不存在任何结果），所以在`odd.js`之中，变量`even`等于`null`，等到后面调用`even(n - 1)`就会报错。
 
 ```bash
 $ node

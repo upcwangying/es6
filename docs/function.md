@@ -944,23 +944,15 @@ let log = ::console.log;
 var log = console.log.bind(console);
 ```
 
-双冒号运算符的运算结果，还是一个对象，因此可以采用链式写法。
+如果双冒号运算符的运算结果，还是一个对象，就可以采用链式写法。
 
 ```javascript
-// 例一
 import { map, takeWhile, forEach } from "iterlib";
 
 getPlayers()
 ::map(x => x.character())
 ::takeWhile(x => x.strength > 100)
 ::forEach(x => console.log(x));
-
-// 例二
-let { find, html } = jake;
-
-document.querySelectorAll("div.myClass")
-::find("p")
-::html("hahaha");
 ```
 
 ## 尾调用优化
@@ -1329,39 +1321,3 @@ clownsEverywhere(
 
 这样的规定也使得，函数参数与数组和对象的尾逗号规则，保持一致了。
 
-## catch 语句的参数
-
-目前，有一个[提案](https://github.com/tc39/proposal-optional-catch-binding)，允许`try...catch`结构中的`catch`语句调用时不带有参数。这个提案跟参数有关，也放在这一章介绍。
-
-传统的写法是`catch`语句必须带有参数，用来接收`try`代码块抛出的错误。
-
-```javascript
-try {
-  //  ···
-} catch (error) {
-  //  ···
-}
-```
-
-新的写法允许省略`catch`后面的参数，而不报错。
-
-```javascript
-try {
-  //  ···
-} catch {
-  //  ···
-}
-```
-
-新写法只在不需要错误实例的情况下有用，因此不及传统写法的用途广。
-
-```javascript
-let jsonData;
-try {
-  jsonData = JSON.parse(str);
-} catch {
-  jsonData = DEFAULT_DATA;
-}
-```
-
-上面代码中，`JSON.parse`报错只有一种可能：解析失败。因此，可以不需要抛出的错误实例。

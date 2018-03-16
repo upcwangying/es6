@@ -422,11 +422,13 @@ console.log(a.foo);
 但是，这里有一个问题，全局变量`global._foo`是可写的，任何文件都可以修改。
 
 ```javascript
+global._foo = { foo: 'world' };
+
 const a = require('./mod.js');
-global._foo = 123;
+console.log(a.foo);
 ```
 
-上面的代码，会使得别的脚本加载`mod.js`都失真。
+上面的代码，会使得加载`mod.js`的脚本都失真。
 
 为了防止这种情况出现，我们就可以使用 Symbol。
 
@@ -448,8 +450,9 @@ module.exports = global[FOO_KEY];
 上面代码中，可以保证`global[FOO_KEY]`不会被无意间覆盖，但还是可以被改写。
 
 ```javascript
+global[Symbol.for('foo')] = { foo: 'world' };
+
 const a = require('./mod.js');
-global[Symbol.for('foo')] = 123;
 ```
 
 如果键名使用`Symbol`方法生成，那么外部将无法引用这个值，当然也就无法改写。
@@ -461,7 +464,7 @@ const FOO_KEY = Symbol('foo');
 // 后面代码相同 ……
 ```
 
-上面代码将导致其他脚本都无法引用`FOO_KEY`。但这样也有一个问题，就是如果多次执行这个脚本，每次得到的`FOO_KEY`都是不一样的。虽然 Node 会将脚本的执行结果缓存，一般情况下，不会多次执行同一个脚本，但是用户可以手动清除缓存，所以也不是完全可靠。
+上面代码将导致其他脚本都无法引用`FOO_KEY`。但这样也有一个问题，就是如果多次执行这个脚本，每次得到的`FOO_KEY`都是不一样的。虽然 Node 会将脚本的执行结果缓存，一般情况下，不会多次执行同一个脚本，但是用户可以手动清除缓存，所以也不是绝对可靠。
 
 ## 内置的 Symbol 值
 
@@ -563,18 +566,31 @@ a2[1] = 6;
 
 ### Symbol.species
 
-对象的`Symbol.species`属性，指向当前对象的构造函数。创造实例时，默认会调用这个方法，即使用这个属性返回的函数当作构造函数，来创造新的实例对象。
+对象的`Symbol.species`属性，指向一个构造函数。创建衍生对象时，会使用该属性。
 
 ```javascript
 class MyArray extends Array {
-  // 覆盖父类 Array 的构造函数
+}
+
+const a = new MyArray(1, 2, 3);
+const b = a.map(x => x);
+const c = a.filter(x => x > 1);
+
+b instanceof MyArray // true
+c instanceof MyArray // true
+```
+
+上面代码中，子类`MyArray`继承了父类`Array`，`a`是`MyArray`的实例，`b`和`c`是`a`的衍生对象。你可能会认为，`b`和`c`都是调用数组方法生成的，所以应该是数组（`Array`的实例），但实际上它们也是`MyArray`的实例。
+
+`Symbol.species`属性就是为了解决这个问题而提供的。现在，我们可以为`MyArray`设置`Symbol.species`属性。
+
+```javascript
+class MyArray extends Array {
   static get [Symbol.species]() { return Array; }
 }
 ```
 
-上面代码中，子类`MyArray`继承了父类`Array`。创建`MyArray`的实例对象时，本来会调用它自己的构造函数（本例中被省略了），但是由于定义了`Symbol.species`属性，所以会使用这个属性返回的的函数，创建`MyArray`的实例。
-
-这个例子也说明，定义`Symbol.species`属性要采用`get`读取器。默认的`Symbol.species`属性等同于下面的写法。
+上面代码中，由于定义了`Symbol.species`属性，创建衍生对象时就会使用这个属性返回的函数，作为构造函数。这个例子也说明，定义`Symbol.species`属性要采用`get`取值器。默认的`Symbol.species`属性等同于下面的写法。
 
 ```javascript
 static get [Symbol.species]() {
@@ -582,23 +598,41 @@ static get [Symbol.species]() {
 }
 ```
 
-下面是一个例子。
+现在，再来看前面的例子。
 
 ```javascript
 class MyArray extends Array {
   static get [Symbol.species]() { return Array; }
 }
-let a = new MyArray(1,2,3);
-let mapped = a.map(x => x * x);
 
-a instanceof MyArray // true
-a instanceof Array // true
+const a = new MyArray();
+const b = a.map(x => x);
 
-mapped instanceof MyArray // false
-mapped instanceof Array // true
+b instanceof MyArray // false
+b instanceof Array // true
 ```
 
-上面代码中，`a`是`MyArray`的实例，所以`a instanceof MyArray`返回`true`。由于构造函数被替换成了`Array`，所以`a`实际上也是`Array`的实例，于是`a instanceof Array`也返回`true`。而`mapped`是`Array.prototype.map`运算的结果，已经是真正的数组，它是`Array`的实例，而不是`MyArray`的实例，于是`mapped instanceof Array`返回`true`，而`mapped instanceof MyArray`返回`false`。
+上面代码中，`a.map(x => x)`生成的衍生对象，就不是`MyArray`的实例，而直接就是`Array`的实例。
+
+再看一个例子。
+
+```javascript
+class T1 extends Promise {
+}
+
+class T2 extends Promise {
+  static get [Symbol.species]() {
+    return Promise;
+  }
+}
+
+new T1(r => r()).then(v => v) instanceof T1 // true
+new T2(r => r()).then(v => v) instanceof T2 // false
+```
+
+上面代码中，`T2`定义了`Symbol.species`属性，`T1`没有。结果就导致了创建衍生对象时（`then`方法），`T1`调用的是自身的构造方法，而`T2`调用的是`Promise`的构造方法。
+
+总之，`Symbol.species`的作用在于，实例对象在运行过程中，需要再次调用自身的构造函数时，会调用该属性指定的构造函数。它主要的用途是，有些类库是在基类的基础上修改的，那么子类使用继承的方法时，作者可能希望返回基类的实例，而不是子类的实例。
 
 ### Symbol.match
 
