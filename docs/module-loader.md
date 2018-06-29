@@ -426,10 +426,10 @@ setTimeout(_ => module.exports = null);
 
 ```javascript
 // 不正确
-import { readfile } from 'fs';
+import { readFile } from 'fs';
 ```
 
-上面的写法不正确，因为`fs`是 CommonJS 格式，只有在运行时才能确定`readfile`接口，而`import`命令要求编译时就确定这个接口。解决方法就是改为整体输入。
+上面的写法不正确，因为`fs`是 CommonJS 格式，只有在运行时才能确定`readFile`接口，而`import`命令要求编译时就确定这个接口。解决方法就是改为整体输入。
 
 ```javascript
 // 正确的写法一
@@ -729,7 +729,7 @@ module.exports = function (n) {
 }
 ```
 
-上面代码中，`even.js`加载`odd.js`，而`odd.js`又去加载`even.js`，形成“循环加载”。这时，执行引擎就会输出`even.js`已经执行的部分（不存在任何结果），所以在`odd.js`之中，变量`even`等于`null`，等到后面调用`even(n - 1)`就会报错。
+上面代码中，`even.js`加载`odd.js`，而`odd.js`又去加载`even.js`，形成“循环加载”。这时，执行引擎就会输出`even.js`已经执行的部分（不存在任何结果），所以在`odd.js`之中，变量`even`等于`undefined`，等到后面调用`even(n - 1)`就会报错。
 
 ```bash
 $ node
