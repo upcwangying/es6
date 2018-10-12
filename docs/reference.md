@@ -93,6 +93,7 @@
 - Mark McDonnell, [Understanding recursion in functional JavaScript programming](http://www.integralist.co.uk/posts/js-recursion.html): 如何自己实现尾递归优化
 - Nicholas C. Zakas, [The ECMAScript 2016 change you probably don't know](https://www.nczonline.net/blog/2016/10/the-ecmascript-2016-change-you-probably-dont-know/): 使用参数默认值时，不能在函数内部显式开启严格模式
 - Axel Rauschmayer, [ES proposal: optional catch binding](http://2ality.com/2017/08/optional-catch-binding.html)
+- Cynthia Lee, [When you should use ES6 arrow functions — and when you shouldn’t](https://medium.freecodecamp.org/when-and-why-you-should-use-es6-arrow-functions-and-when-you-shouldnt-3d851d7f0b26): 讨论箭头函数的适用场合
 
 ## 对象
 
@@ -198,6 +199,8 @@
 - Axel Rauschmayer, [Classes in ECMAScript 6 (final semantics)](http://www.2ality.com/2015/02/es6-classes-final.html): Class 语法的详细介绍和设计思想分析
 - Eric Faust, [ES6 In Depth: Subclassing](https://hacks.mozilla.org/2015/08/es6-in-depth-subclassing/): Class 语法的深入介绍
 - Nicolás Bevacqua, [Binding Methods to Class Instance Objects](https://ponyfoo.com/articles/binding-methods-to-class-instance-objects): 如何绑定类的实例中的 this
+- Jamie Kyle, [JavaScript's new #private class fields](https://jamie.build/javascripts-new-private-class-fields.html)：私有属性的介绍。
+
 
 ## Decorator
 
@@ -231,6 +234,7 @@
 - Axel Rauschmayer, [ES proposal: Shared memory and atomics](http://2ality.com/2017/01/shared-array-buffer.html)
 - Lin Clark, [Avoiding race conditions in SharedArrayBuffers with Atomics](https://hacks.mozilla.org/2017/06/avoiding-race-conditions-in-sharedarraybuffers-with-atomics/): Atomics 对象使用场景的解释
 - Lars T Hansen, [Shared memory - a brief tutorial](https://github.com/tc39/ecmascript_sharedmem/blob/master/TUTORIAL.md)
+- James Milner, [The Return of SharedArrayBuffers and Atomics](https://www.sitepen.com/blog/2018/09/19/the-return-of-sharedarraybuffers-and-atomics/)
 
 ## SIMD
 

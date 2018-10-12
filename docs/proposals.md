@@ -523,7 +523,7 @@ parseInt('123_456') // 123
 
 ### 简介
 
-JavaScript 所有数字都保存成 64 位浮点数，这给数值的表示带来了两大限制。一是数值的精度只能到 53 个二进制位（相当于 16 个十进制位），大于这个范围的整数，JavaScript 是无法精确表示的，这使得 JavaScript 不适合进行科学和金融方面的精确计算。二是大于或等于2的1024次方的数值，JavaScript 无法表示，会返回`Infinite`。
+JavaScript 所有数字都保存成 64 位浮点数，这给数值的表示带来了两大限制。一是数值的精度只能到 53 个二进制位（相当于 16 个十进制位），大于这个范围的整数，JavaScript 是无法精确表示的，这使得 JavaScript 不适合进行科学和金融方面的精确计算。二是大于或等于2的1024次方的数值，JavaScript 无法表示，会返回`Infinity`。
 
 ```javascript
 // 超过 53 个二进制位的数值，无法保持精度
@@ -565,19 +565,19 @@ typeof 123n // 'bigint'
 
 ### BigInt 对象
 
-JavaScript 原生提供`BigInt`对象，可以用作构造函数生成 BitInt 类型的数值。转换规则基本与`Number()`一致，将别的类型的值转为 BigInt。
+JavaScript 原生提供`BigInt`对象，可以用作构造函数生成 BigInt 类型的数值。转换规则基本与`Number()`一致，将别的类型的值转为 BigInt。
 
 ```javascript
 BigInt(123) // 123n
 BigInt('123') // 123n
-BitInt(false) // 0n
-BitInt(true) // 1n
+BigInt(false) // 0n
+BigInt(true) // 1n
 ```
 
-`BitInt`构造函数必须有参数，而且参数必须可以正常转为数值，下面的用法都会报错。
+`BigInt`构造函数必须有参数，而且参数必须可以正常转为数值，下面的用法都会报错。
 
 ```javascript
-new BitInt() // TypeError
+new BigInt() // TypeError
 BigInt(undefined) //TypeError
 BigInt(null) // TypeError
 BigInt('123n') // SyntaxError
