@@ -58,6 +58,21 @@ const arr = [
 // [1]
 ```
 
+注意，只有函数调用时，扩展运算符才可以放在圆括号中，否则会报错。
+
+```javascript
+(...[1, 2])
+// Uncaught SyntaxError: Unexpected number
+
+console.log((...[1, 2]))
+// Uncaught SyntaxError: Unexpected number
+
+console.log(...[1, 2])
+// 1 2
+```
+
+上面三种情况，扩展运算符都放在圆括号里面，但是前两种情况会报错，因为扩展运算符所在的括号不是函数调用。
+
 ### 替代函数的 apply 方法
 
 由于扩展运算符可以展开数组，所以不再需要`apply`方法，将数组转为函数的参数了。
@@ -270,14 +285,28 @@ str.split('').reverse().join('')
 
 **（5）实现了 Iterator 接口的对象**
 
-任何 Iterator 接口的对象（参阅 Iterator 一章），都可以用扩展运算符转为真正的数组。
+任何定义了遍历器（Iterator）接口的对象（参阅 Iterator 一章），都可以用扩展运算符转为真正的数组。
 
 ```javascript
 let nodeList = document.querySelectorAll('div');
 let array = [...nodeList];
 ```
 
-上面代码中，`querySelectorAll`方法返回的是一个`nodeList`对象。它不是数组，而是一个类似数组的对象。这时，扩展运算符可以将其转为真正的数组，原因就在于`NodeList`对象实现了 Iterator 。
+上面代码中，`querySelectorAll`方法返回的是一个`NodeList`对象。它不是数组，而是一个类似数组的对象。这时，扩展运算符可以将其转为真正的数组，原因就在于`NodeList`对象实现了 Iterator 。
+
+```javascript
+Number.prototype[Symbol.iterator] = function*() {
+  let i = 0;
+  let num = this.valueOf();
+  while (i < num) {
+    yield i++;
+  }
+}
+
+console.log([...5]) // [0, 1, 2, 3, 4]
+```
+
+上面代码中，先定义了`Number`对象的遍历器接口，扩展运算符将`5`自动转成`Number`实例以后，就会调用这个接口，就会返回自定义的结果。
 
 对于那些没有部署 Iterator 接口的类似数组的对象，扩展运算符就无法将其转为真正的数组。
 
@@ -517,7 +546,7 @@ function ArrayOf(){
 
 ## 数组实例的 copyWithin()
 
-数组实例的`copyWithin`方法，在当前数组内部，将指定位置的成员复制到其他位置（会覆盖原有成员），然后返回当前数组。也就是说，使用这个方法，会修改当前数组。
+数组实例的`copyWithin()`方法，在当前数组内部，将指定位置的成员复制到其他位置（会覆盖原有成员），然后返回当前数组。也就是说，使用这个方法，会修改当前数组。
 
 ```javascript
 Array.prototype.copyWithin(target, start = 0, end = this.length)
@@ -526,8 +555,8 @@ Array.prototype.copyWithin(target, start = 0, end = this.length)
 它接受三个参数。
 
 - target（必需）：从该位置开始替换数据。如果为负值，表示倒数。
-- start（可选）：从该位置开始读取数据，默认为 0。如果为负值，表示倒数。
-- end（可选）：到该位置前停止读取数据，默认等于数组长度。如果为负值，表示倒数。
+- start（可选）：从该位置开始读取数据，默认为 0。如果为负值，表示从末尾开始计算。
+- end（可选）：到该位置前停止读取数据，默认等于数组长度。如果为负值，表示从末尾开始计算。
 
 这三个参数都应该是数值，如果不是，会自动转为数值。
 

@@ -216,36 +216,6 @@ a?.b = c
 
 为了保证兼容以前的代码，允许`foo?.3:0`被解析成`foo ? .3 : 0`，因此规定如果`?.`后面紧跟一个十进制数字，那么`?.`不再被看成是一个完整的运算符，而会按照三元运算符进行处理，也就是说，那个小数点会归属于后面的十进制数字，形成一个小数。
 
-## 直接输入 U+2028 和 U+2029
-
-JavaScript 字符串允许直接输入字符，以及输入字符的转义形式。举例来说，“中”的 Unicode 码点是 U+4e2d，你可以直接在字符串里面输入这个汉字，也可以输入它的转义形式`\u4e2d`，两者是等价的。
-
-```javascript
-'中' === '\u4e2d' // true
-```
-
-但是，JavaScript 规定有5个字符，不能在字符串里面直接使用，只能使用转义形式。
-
-- U+005C：反斜杠（reverse solidus)
-- U+000D：回车（carriage return）
-- U+2028：行分隔符（line separator）
-- U+2029：段分隔符（paragraph separator）
-- U+000A：换行符（line feed）
-
-举例来说，字符串里面不能直接包含反斜杠，一定要转义写成`\\`或者`\u005c`。
-
-这个规定本身没有问题，麻烦在于 JSON 格式允许字符串里面直接使用 U+2028（行分隔符）和 U+2029（段分隔符）。这样一来，服务器输出的 JSON 被`JSON.parse`解析，就有可能直接报错。
-
-JSON 格式已经冻结（RFC 7159），没法修改了。为了消除这个报错，现在有一个[提案](https://github.com/tc39/proposal-json-superset)，允许 JavaScript 字符串直接输入 U+2028（行分隔符）和 U+2029（段分隔符）。
-
-```javascript
-const PS = eval("'\u2029'");
-```
-
-根据这个提案，上面的代码不会报错。
-
-注意，模板字符串现在就允许直接输入这两个字符。另外，正则表达式依然不允许直接输入这两个字符，这是没有问题的，因为 JSON 本来就不允许直接包含正则表达式。
-
 ## 函数的部分执行
 
 ### 语法
@@ -538,14 +508,21 @@ Math.pow(2, 1024) // Infinity
 ```javascript
 const a = 2172141653n;
 const b = 15346349309n;
+
+// BigInt 可以保持精度
 a * b // 33334444555566667777n
+
+// 普通整数无法保持精度
 Number(a) * Number(b) // 33334444555566670000
 ```
 
-为了与 Number 类型区别，BigInt 类型的数据必须使用后缀`n`表示。
+为了与 Number 类型区别，BigInt 类型的数据必须添加后缀`n`。
 
 ```javascript
-1234n
+1234 // 普通整数
+1234n // BigInt
+
+// BigInt 的运算
 1n + 2n // 3n
 ```
 
@@ -557,15 +534,28 @@ BigInt 同样可以使用各种进制表示，都要加上后缀`n`。
 0xFFn // 十六进制
 ```
 
+BigInt 与普通整数是两种值，它们之间并不相等。
+
+```javascript
+42n === 42 // false
+```
+
 `typeof`运算符对于 BigInt 类型的数据返回`bigint`。
 
 ```javascript
 typeof 123n // 'bigint'
 ```
 
+BigInt 可以使用负号（`-`），但是不能使用正号（`+`），因为会与 asm.js 冲突。
+
+```javascript
+-42n // 正确
++42n // 报错
+```
+
 ### BigInt 对象
 
-JavaScript 原生提供`BigInt`对象，可以用作构造函数生成 BigInt 类型的数值。转换规则基本与`Number()`一致，将别的类型的值转为 BigInt。
+JavaScript 原生提供`BigInt`对象，可以用作构造函数生成 BigInt 类型的数值。转换规则基本与`Number()`一致，将其他类型的值转为 BigInt。
 
 ```javascript
 BigInt(123) // 123n
@@ -574,7 +564,7 @@ BigInt(false) // 0n
 BigInt(true) // 1n
 ```
 
-`BigInt`构造函数必须有参数，而且参数必须可以正常转为数值，下面的用法都会报错。
+`BigInt()`构造函数必须有参数，而且参数必须可以正常转为数值，下面的用法都会报错。
 
 ```javascript
 new BigInt() // TypeError
@@ -586,6 +576,13 @@ BigInt('abc') // SyntaxError
 
 上面代码中，尤其值得注意字符串`123n`无法解析成 Number 类型，所以会报错。
 
+参数如果是小数，也会报错。
+
+```javascript
+BigInt(1.5) // RangeError
+BigInt('1.5') // SyntaxError
+```
+
 BigInt 对象继承了 Object 提供的实例方法。
 
 - `BigInt.prototype.toLocaleString()`
@@ -594,26 +591,69 @@ BigInt 对象继承了 Object 提供的实例方法。
 
 此外，还提供了三个静态方法。
 
-- `BigInt.asUintN(width, BigInt)`： 对给定的大整数，返回 0 到 2<sup>width</sup> - 1 之间的大整数形式。
-- `BigInt.asIntN(width, BigInt)`：对给定的大整数，返回 -2<sup>width - 1</sup> 到 2<sup>width - 1</sup> - 1 之间的大整数形式。
-- `BigInt.parseInt(string[, radix])`：近似于`Number.parseInt`，将一个字符串转换成指定进制的大整数。
+- `BigInt.asUintN(width, BigInt)`： 给定的 BigInt 转为 0 到 2<sup>width</sup> - 1 之间对应的值。
+- `BigInt.asIntN(width, BigInt)`：给定的 BigInt 转为 -2<sup>width - 1</sup> 到 2<sup>width - 1</sup> - 1 之间对应的值。
+- `BigInt.parseInt(string[, radix])`：近似于`Number.parseInt()`，将一个字符串转换成指定进制的 BigInt。
 
 ```javascript
-// 将一个大整数转为 64 位整数的形式
-const int64a = BigInt.asUintN(64, 12345n);
+const max = 2n ** (64n - 1n) - 1n;
 
-// Number.parseInt 与 BigInt.parseInt 的对比
+BigInt.asIntN(64, max)
+// 9223372036854775807n
+BigInt.asIntN(64, max + 1n)
+// -9223372036854775808n
+BigInt.asUintN(64, max + 1n)
+// 9223372036854775808n
+```
+
+上面代码中，`max`是64位带符号的 BigInt 所能表示的最大值。如果对这个值加`1n`，`BigInt.asIntN()`将会返回一个负值，因为这时新增的一位将被解释为符号位。而`BigInt.asUintN()`方法由于不存在符号位，所以可以正确返回结果。
+
+如果`BigInt.asIntN()`和`BigInt.asUintN()`指定的位数，小于数值本身的位数，那么头部的位将被舍弃。
+
+```javascript
+const max = 2n ** (64n - 1n) - 1n;
+
+BigInt.asIntN(32, max) // -1n
+BigInt.asUintN(32, max) // 4294967295n
+```
+
+上面代码中，`max`是一个64位的 BigInt，如果转为32位，前面的32位都会被舍弃。
+
+下面是`BigInt.parseInt()`的例子。
+
+```javascript
+// Number.parseInt() 与 BigInt.parseInt() 的对比
 Number.parseInt('9007199254740993', 10)
 // 9007199254740992
 BigInt.parseInt('9007199254740993', 10)
 // 9007199254740993n
 ```
 
-上面代码中，由于有效数字超出了最大限度，`Number.parseInt`方法返回的结果是不精确的，而`BigInt.parseInt`方法正确返回了对应的大整数。
+上面代码中，由于有效数字超出了最大限度，`Number.parseInt`方法返回的结果是不精确的，而`BigInt.parseInt`方法正确返回了对应的 BigInt。
 
-对于二进制数组，BigInt 新增了两个类型`BigUint64Array`和`BigInt64Array`，这两种数据类型返回的都是大整数。`DataView`对象的实例方法`DataView.prototype.getBigInt64`和`DataView.prototype.getBigUint64`，返回的也是大整数。
+对于二进制数组，BigInt 新增了两个类型`BigUint64Array`和`BigInt64Array`，这两种数据类型返回的都是64位 BigInt。`DataView`对象的实例方法`DataView.prototype.getBigInt64()`和`DataView.prototype.getBigUint64()`，返回的也是 BigInt。
 
-### 运算
+### 转换规则
+
+可以使用`Boolean()`、`Number()`和`String()`这三个方法，将 BigInt 可以转为布尔值、数值和字符串类型。
+
+```javascript
+Boolean(0n) // false
+Boolean(1n) // true
+Number(1n)  // 1
+String(1n)  // "1"
+```
+
+上面代码中，注意最后一个例子，转为字符串时后缀`n`会消失。
+
+另外，取反运算符（`!`）也可以将 BigInt 转为布尔值。
+
+```javascript
+!0n // true
+!1n // false
+```
+
+### 数学运算
 
 数学运算方面，BigInt 类型的`+`、`-`、`*`和`**`这四个二元运算符，与 Number 类型的行为一致。除法运算`/`会舍去小数部分，返回一个整数。
 
@@ -622,15 +662,20 @@ BigInt.parseInt('9007199254740993', 10)
 // 1n
 ```
 
-几乎所有的 Number 运算符都可以用在 BigInt，但是有两个除外：不带符号的右移位运算符`>>>`和一元的求正运算符`+`，使用时会报错。前者是因为`>>>`运算符是不带符号的，但是 BigInt 总是带有符号的，导致该运算无意义，完全等同于右移运算符`>>`。后者是因为一元运算符`+`在 asm.js 里面总是返回 Number 类型，为了不破坏 asm.js 就规定`+1n`会报错。
+几乎所有的数值运算符都可以用在 BigInt，但是有两个例外。
 
-Integer 类型不能与 Number 类型进行混合运算。
+- 不带符号的右移位运算符`>>>`
+- 一元的求正运算符`+`
+
+上面两个运算符用在 BigInt 会报错。前者是因为`>>>`运算符是不带符号的，但是 BigInt 总是带有符号的，导致该运算无意义，完全等同于右移运算符`>>`。后者是因为一元运算符`+`在 asm.js 里面总是返回 Number 类型，为了不破坏 asm.js 就规定`+1n`会报错。
+
+BigInt 不能与普通数值进行混合运算。
 
 ```javascript
 1n + 1.3 // 报错
 ```
 
-上面代码报错是因为无论返回的是 BigInt 或 Number，都会导致丢失信息。比如`(2n**53n + 1n) + 0.5`这个表达式，如果返回 BigInt 类型，`0.5`这个小数部分会丢失；如果返回 Number 类型，有效精度只能保持 53 位，导致精度下降。
+上面代码报错是因为无论返回的是 BigInt 或 Number，都会导致丢失精度信息。比如`(2n**53n + 1n) + 0.5`这个表达式，如果返回 BigInt 类型，`0.5`这个小数部分会丢失；如果返回 Number 类型，有效精度只能保持 53 位，导致精度下降。
 
 同样的原因，如果一个标准库函数的参数预期是 Number 类型，但是得到的是一个 BigInt，就会报错。
 
@@ -650,6 +695,21 @@ asm.js 里面，`|0`跟在一个数值的后面会返回一个32位整数。根�
 1n | 0 // 报错
 ```
 
+### 其他运算
+
+BigInt 对应的布尔值，与 Number 类型一致，即`0n`会转为`false`，其他值转为`true`。
+
+```javascript
+if (0n) {
+  console.log('if');
+} else {
+  console.log('else');
+}
+// else
+```
+
+上面代码中，`0n`对应`false`，所以会进入`else`子句。
+
 比较运算符（比如`>`）和相等运算符（`==`）允许 BigInt 与其他类型的值混合计算，因为这样做不会损失精度。
 
 ```javascript
@@ -657,29 +717,10 @@ asm.js 里面，`|0`跟在一个数值的后面会返回一个32位整数。根�
 0n < true // true
 0n == 0 // true
 0n == false // true
-```
-
-同理，精确相等运算符（`===`）也可以混合使用。
-
-```javascript
 0n === 0 // false
 ```
 
-上面代码中，由于`0n`与`0`的数据类型不同，所以返回`false`。
-
-大整数可以转为其他数据类型。
-
-```javascript
-Boolean(0n) // false
-Boolean(1n) // true
-Number(1n)  // 1
-String(1n)  // "1"
-
-!0n // true
-!1n // false
-```
-
-大整数也可以与字符串混合运算。
+BigInt 与字符串混合运算时，会先转为字符串，再进行运算。
 
 ```javascript
 '' + 123n // "123"
@@ -716,4 +757,48 @@ Math.signbit(-0) //true
 - 如果参数是`-0`，返回`true`
 - 如果参数是负值，返回`true`
 - 其他情况返回`false`
+
+## 双冒号运算符
+
+箭头函数可以绑定`this`对象，大大减少了显式绑定`this`对象的写法（`call`、`apply`、`bind`）。但是，箭头函数并不适用于所有场合，所以现在有一个[提案](https://github.com/zenparsing/es-function-bind)，提出了“函数绑定”（function bind）运算符，用来取代`call`、`apply`、`bind`调用。
+
+函数绑定运算符是并排的两个冒号（`::`），双冒号左边是一个对象，右边是一个函数。该运算符会自动将左边的对象，作为上下文环境（即`this`对象），绑定到右边的函数上面。
+
+```javascript
+foo::bar;
+// 等同于
+bar.bind(foo);
+
+foo::bar(...arguments);
+// 等同于
+bar.apply(foo, arguments);
+
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+function hasOwn(obj, key) {
+  return obj::hasOwnProperty(key);
+}
+```
+
+如果双冒号左边为空，右边是一个对象的方法，则等于将该方法绑定在该对象上面。
+
+```javascript
+var method = obj::obj.foo;
+// 等同于
+var method = ::obj.foo;
+
+let log = ::console.log;
+// 等同于
+var log = console.log.bind(console);
+```
+
+如果双冒号运算符的运算结果，还是一个对象，就可以采用链式写法。
+
+```javascript
+import { map, takeWhile, forEach } from "iterlib";
+
+getPlayers()
+::map(x => x.character())
+::takeWhile(x => x.strength > 100)
+::forEach(x => console.log(x));
+```
 
